@@ -36,11 +36,21 @@ const runViteTest = async (name: string, htmlImport: string) => {
 
 const browser = await launch();
 
-await runTest("Bun limit", () => spawn("bun", ["bun-limit.ts"]), 3000);
-await runTest("Node limit", () => spawn("node", ["node-limit.js"]), 4000);
-await runViteTest("ESM", "/esm/1.js");
-await runViteTest("JS", "/js/1.js");
-await runViteTest("TS", "/ts/1.ts");
+for (const count of [10, 100, 1_000, 5_000, 8_000, 10_000]) {
+  console.log(`Running tests for ${count} files`);
+
+  writeFileSync(
+    "index.html",
+    readFileSync("index.html", "utf-8").replace("src/", `src/${count}/`),
+  );
+
+  await runTest("Bun limit", () => spawn("bun", ["bun-limit.ts"]), 3000);
+  await runTest("Node limit", () => spawn("node", ["node-limit.js"]), 4000);
+  await runViteTest("ESM", "/esm/1.js");
+  await runViteTest("JS", "/js/1.js");
+  await runViteTest("TS", "/ts/1.ts");
+  console.log("---");
+}
 
 await browser.close();
 writeFileSync("index.html", initialHTML);
